@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from typing import Any, Generator
 
@@ -58,13 +59,14 @@ def context(browser: Browser, request) -> Generator[BrowserContext, None, None]:
 def page(context: BrowserContext, request):
     new_page = context.new_page()
     yield new_page
-    new_page.screenshot(full_page=True, path=f"{os.environ.get('PYTEST_CURRENT_TEST')}.png")
+    # new_page.screenshot(full_page=True, path=pathlib.Path() / f"{os.environ.get('PYTEST_CURRENT_TEST')}.png")
     new_page.close()
 
 
 @pytest.fixture(autouse=True)
-def before_and_after_test(context: BrowserContext):
-    text_file = open("cookies.json", "r")
+def before_and_after_test(context: BrowserContext, request):
+    os.environ["PROJECT_PATH"] = os.path.dirname(os.path.abspath(__file__))
+    text_file = open(os.path.join(os.getenv('PROJECT_PATH'), "cookies.json"), "r")
     text_cookies = text_file.read()
     list_dict_cookies = list(eval(text_cookies))
     context.clear_cookies()
@@ -75,6 +77,7 @@ def before_and_after_test(context: BrowserContext):
 def pytest_addoption(parser: Any) -> None:
     parser.addini("base_url", help="LinkedIn base url", default=None)
     parser.addini("headless", help="Browser mode", default=True)
+    parser.addini("alluredir", help="Allure report directory", default=None)
 
 
 @pytest.fixture
