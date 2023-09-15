@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import typing
@@ -51,7 +52,7 @@ class JobsPage(BasePage):
         location_and_type_patterns: list[typing.Pattern[str]] = None
     ):
         if self._no_results_found.is_visible():
-            return []
+            return [], []
 
         # find matching cards
         cards_match = []
@@ -69,7 +70,11 @@ class JobsPage(BasePage):
             for i in range(self.search_results.job_cards.count()):
                 card = JobCard(self.search_results.job_cards.nth(i))
                 all_cards_on_page.append(
-                    {"title": card.title, "url": card.url, "location_and_type": card.location_and_type})
+                    {"title": card.title,
+                     "url": os.environ["BASE_URL"] + re.compile(r"/jobs/view/\d{10}").search(card.url).group(),
+                     "company": card.company,
+                     "location_and_type": card.location_and_type
+                     })
 
             # filter the results by location and type matching one of the patterns
             for i in range(len(all_cards_on_page)):
@@ -96,6 +101,7 @@ class JobCard:
         self._locator = locator
         self._title_locator = "div.artdeco-entity-lockup__title a"
         self.title = locator.locator(self._title_locator).text_content().strip()
+        self.company = locator.locator("div.artdeco-entity-lockup__subtitle").text_content().strip()
         self.url = locator.locator(self._title_locator).get_attribute("href")
         self.location_and_type = locator.locator(
             "div.artdeco-entity-lockup__caption li.job-card-container__metadata-item").text_content().strip()
