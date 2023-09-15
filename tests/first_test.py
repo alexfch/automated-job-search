@@ -2,12 +2,12 @@ import json
 import os
 import re
 
-import allure
 import pytest
 
 from pages.home import HomePage
 from pages.jobs import JobsPage
 from pages.login import LoginPage
+from utilities import results_utils
 
 jobs_to_search = ["head of qa", "qa automation manager", "qa automation lead"]
 
@@ -44,21 +44,9 @@ def test_something(job_title, context, login_page: LoginPage, home_page: HomePag
         ]
     )
 
-    def save_to_file(file_name, data):
-        if not isinstance(data, list) or len(data) == 0:
-            return
+    results_utils.save_distinct_jobs_list(os.environ["JOB_CANDIDATES_FILE_PATH"], collected_job_cards)
+    results_utils.save_distinct_jobs_list(os.environ["DONT_MATCH_FILE_PATH"], dont_match)
 
-        with open(file_name, "r+") as f:
-            c = f.read().replace("'", "\"")
-            file_content = [] if c == "" else json.loads(c)
-            new_content = file_content + data
-            distinct_list = [dict(t) for t in {tuple(d.items()) for d in new_content}]
-            pretty_content = json.dumps(distinct_list, indent=2)
-            f.seek(0)
-            f.write(pretty_content)
-
-    save_to_file(os.environ["JOB_CANDIDATES_FILE_PATH"], collected_job_cards)
-    save_to_file(os.environ["DONT_MATCH_FILE_PATH"], dont_match)
 
     # let ChatGPT chose jobs by relevant job titles
 
