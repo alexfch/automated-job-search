@@ -1,6 +1,5 @@
 import json
 import os
-import pathlib
 import re
 
 import allure
@@ -13,7 +12,6 @@ from pages.login import LoginPage
 jobs_to_search = ["head of qa", "qa automation manager", "qa automation lead"]
 
 
-@allure.title("Run job search script")
 @pytest.mark.parametrize("job_title", jobs_to_search)
 def test_something(job_title, context, login_page: LoginPage, home_page: HomePage, jobs_page: JobsPage) -> None:
     # navigate to jobs page
@@ -39,6 +37,7 @@ def test_something(job_title, context, login_page: LoginPage, home_page: HomePag
     # find by location and job type
     collected_job_cards, dont_match = jobs_page.collect_jobs_by_criteria(
         location_and_type_patterns=[
+            re.compile(r"Ontario, Canada.*"),  # hybrid or remote jobs in Ontario
             re.compile(r"(Toronto|Mississauga|Oakville|Burlington), ON(?: \(.*\))?"),  # any job in these cities
             re.compile(r"(Cambridge|Waterloo), ON \(.*(Remote|Hybrid)\)"),  # remote or hybrid job in these cities
             re.compile(r".*\(Remote\)"),  # remote job at any location
@@ -58,8 +57,8 @@ def test_something(job_title, context, login_page: LoginPage, home_page: HomePag
             f.seek(0)
             f.write(pretty_content)
 
-    save_to_file(os.path.join(os.getenv('PROJECT_PATH'), "job-candidates.json"), collected_job_cards)
-    save_to_file(os.path.join(os.getenv('PROJECT_PATH'), "dont-match.json"), dont_match)
+    save_to_file(os.environ["JOB_CANDIDATES_FILE_PATH"], collected_job_cards)
+    save_to_file(os.environ["DONT_MATCH_FILE_PATH"], dont_match)
 
     # let ChatGPT chose jobs by relevant job titles
 

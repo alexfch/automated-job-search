@@ -14,9 +14,8 @@ class BasePage:
         self.main_menu = MainMenu(page)
         self.filters_panel = FiltersPanel(page)
 
-    def save_cookies_to_file(self, file_name_or_path="cookies.json"):
-        file_name_or_path = os.path.join(os.getenv('PROJECT_PATH'), file_name_or_path)
+    def save_cookies_to_file(self):
         cookies = str(self.page.context.cookies())
-        text_file = open(file_name_or_path, "w")
+        text_file = open(os.environ["COOKIES_FILE_PATH"], "w")
         text_file.write(cookies)
         text_file.close()
