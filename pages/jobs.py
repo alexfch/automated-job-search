@@ -24,7 +24,13 @@ class JobsSearchResultsPanel:
 
                 :return:
                 """
-        self.job_cards.nth(0).hover(position={"x": 50, "y": 10})  # hover mouse over the jobs list panel
+        try:
+           self.job_cards.nth(0).hover(position={"x": 50, "y": 10})  # hover mouse over the jobs list panel
+        except:
+            if self.job_cards.count() == 0 and not self.pagination.has_next():
+                print("""WARNING! An unexpected issue appeared while scrolling. 
+                Probably 'No Results Found' appeared while working with pagination. Check screenshot""")
+                return
         time_start = time.time()
         while not self.is_all_jobs_loaded() and time.time() - time_start < 1:
             self._page.mouse.wheel(delta_x=0, delta_y=200)
@@ -132,5 +138,13 @@ class Pagination:
         if self.has_next():
             next_number = str(int(self._current_page.text_content().strip()) + 1)
             self._next_page.click()
-            expect(self._current_page).to_contain_text(next_number)
+            try:
+                expect(self._current_page).to_contain_text(next_number)
+            except AssertionError:
+                # This is a workaround for LinkedIn defect when 'No Results Found' page appears during pages navigation
+                if not self._pagination_panel.is_visible():
+                    print(f"""WARNING! Couldn't navigate to page {next_number}.
+                    It seems 'No Results Found' page showed up. Check screenshot""")
+                else:
+                    raise
 

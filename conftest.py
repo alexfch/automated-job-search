@@ -3,6 +3,8 @@ import pathlib
 
 from typing import Any, Generator
 
+import dotenv
+import openai
 import pytest
 from playwright.sync_api import (
     Browser,
@@ -59,25 +61,24 @@ def context(browser: Browser, request) -> Generator[BrowserContext, None, None]:
 def page(context: BrowserContext, request):
     new_page = context.new_page()
     yield new_page
+    new_page.screenshot(full_page=True, path=f"{os.environ.get('PYTEST_CURRENT_TEST')}.png")
     new_page.close()
+
+
+@pytest.fixture(autouse=True)
+def read_secrets():
+    dotenv.load_dotenv()
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 @pytest.fixture(autouse=True)
 def before_and_after_test(context: BrowserContext, request):
     os.environ["BASE_URL"] = request.config.getini('base_url')
     os.environ["PROJECT_PATH"] = str(request.config.rootpath)  # os.path.dirname(os.path.abspath(__file__))
-    os.environ["COOKIES_FILE_PATH"] = os.path.join(
-        os.getenv('PROJECT_PATH'),
-        request.config.getini('cookies_file_name')
-    )
-    os.environ["JOB_CANDIDATES_FILE_PATH"] = os.path.join(
-        os.getenv('PROJECT_PATH'),
-        request.config.getini('job_candidates_file_name')
-    )
-    os.environ["DONT_MATCH_FILE_PATH"] = os.path.join(
-        os.getenv('PROJECT_PATH'),
-        request.config.getini('dont_match_file_name')
-    )
+    os.environ["COOKIES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "cookies.json")
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    # os.environ["JOB_CANDIDATES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "job-candidates.json")
+    # os.environ["DONT_MATCH_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'),"dont-match.json")
 
     text_file = open(os.environ["COOKIES_FILE_PATH"], "r")
     text_cookies = text_file.read()
@@ -89,10 +90,6 @@ def before_and_after_test(context: BrowserContext, request):
 
 def pytest_addoption(parser: Any) -> None:
     parser.addini("headless", help="Browser mode", default=True)
-    parser.addini("cookies_file_name", help="Cookies file name", default=None)
-    parser.addini("cookies_file_name", help="Cookies file name", default=True)
-    parser.addini("job_candidates_file_name", help="Job candidates file name", default=True)
-    parser.addini("dont_match_file_name", help="Don't match file name", default=True)
     parser.addini("alluredir", help="Allure report directory", default=None)
 
 

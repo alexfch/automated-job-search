@@ -1,4 +1,3 @@
-import json
 import os
 import re
 
@@ -7,13 +6,17 @@ import pytest
 from pages.home import HomePage
 from pages.jobs import JobsPage
 from pages.login import LoginPage
-from utilities import results_utils
+from utilities import results_utils, chatgpt
+from settings import candidates_file_name, dont_matches_file_name
 
-jobs_to_search = ["head of qa", "qa automation manager", "qa automation lead"]
+jobs_to_search = ["head of quality assurance",
+                  "qa manager",
+                  "qa automation lead",
+                  "qa automation engineer"]
 
 
 @pytest.mark.parametrize("job_title", jobs_to_search)
-def test_something(job_title, context, login_page: LoginPage, home_page: HomePage, jobs_page: JobsPage) -> None:
+def test_search_jobs_by_criteria(job_title, context, login_page: LoginPage, home_page: HomePage, jobs_page: JobsPage) -> None:
     # navigate to jobs page
     if not context.cookies():
         login_page.navigate()
@@ -44,17 +47,39 @@ def test_something(job_title, context, login_page: LoginPage, home_page: HomePag
         ]
     )
 
-    results_utils.save_distinct_jobs_list(os.environ["JOB_CANDIDATES_FILE_PATH"], collected_job_cards)
-    results_utils.save_distinct_jobs_list(os.environ["DONT_MATCH_FILE_PATH"], dont_match)
+    results_utils.save_distinct_jobs_list(candidates_file_name, collected_job_cards)
+    results_utils.save_distinct_jobs_list(dont_matches_file_name, dont_match)
 
 
-    # let ChatGPT chose jobs by relevant job titles
+def test_exclude_irrelevant_job_titles_classic():
+    job_titles = results_utils.get_titles_from_file(candidates_file_name)
+    job_titles = list(dict.fromkeys(job_titles))
+
+    key_words = ["quality", "test","qa "]
+    relevant_titles = [title for title in job_titles for kw in key_words if kw.lower() in title.lower()]
+
+    irrelevant_titles = [x for x in job_titles if x not in relevant_titles]
+    irrelevant_jobs = results_utils.get_jobs_from_file_by_titles(irrelevant_titles, candidates_file_name)
+    results_utils.save_distinct_jobs_list(dont_matches_file_name, irrelevant_jobs)
+
+    results_utils.filter_jobs_in_file_by_titles(relevant_titles, candidates_file_name)
+
+
+def test_exclude_irrelevant_job_titles_chatgpt():
+    # let ChatGPT chose jobs with relevant job titles
+    job_titles = results_utils.get_titles_from_file(candidates_file_name)
+    job_titles = list(dict.fromkeys(job_titles))
+    relevant_titles = chatgpt.get_relevant_titles(gpt_choice_criteria, job_titles)
+
+    # irrelevant_titles = [x for x in job_titles if x not in relevant_titles]
+    # irrelevant_jobs = results_utils.get_jobs_from_file_by_titles(irrelevant_titles, candidates_file_name)
+    # results_utils.save_distinct_jobs_list(dont_matches_file_name, irrelevant_jobs)
+
+    # results_utils.filter_jobs_in_file_by_titles(relevant_titles, candidates_file_name)
 
     # exclude known jobs (both that passed and not passed job description evaluation)
     # -- IMPLEMENT LATER BUT DESIGN WITH IT IN MIND
 
     # let chatgpt evaluate job description
-
-    # save url if the job meets the criteria
 
     # in a separate collection save urls of the jobs that pass job description evaluation
