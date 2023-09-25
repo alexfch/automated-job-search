@@ -9,5 +9,5 @@ class HomePage(BasePage):
         super().__init__(page)
 
     def navigate(self):
-        self.page.goto('/')
+        self.page.goto('/', timeout=0)
         return self

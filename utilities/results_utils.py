@@ -11,8 +11,17 @@ def save_distinct_jobs_list(path_to_file, new_jobs):
         return
 
     existing_jobs = read_from_file(absolute_path(path_to_file))
-    distinct_list = [dict(t) for t in {tuple(d.items()) for d in existing_jobs + new_jobs}]
-    save_to_file(absolute_path(path_to_file), distinct_list)
+    existing_urls = [job["url"] for job in existing_jobs]
+
+    unique_new_jobs = [dict(t) for t in {tuple(d.items()) for d in new_jobs}]
+    new_urls = [job["url"] for job in unique_new_jobs]
+
+    diff_urls = list(set(new_urls) - set(existing_urls))
+    diff_jobs = [job for job in unique_new_jobs if job["url"] in diff_urls]
+
+    combined_list = existing_jobs + diff_jobs
+
+    save_to_file(absolute_path(path_to_file), combined_list)
 
 
 def get_titles_from_file(path_to_file):
@@ -28,6 +37,16 @@ def get_jobs_from_file_by_titles(titles, path_to_file):
 def filter_jobs_in_file_by_titles(titles, path_to_file):
     filtered_jobs = get_jobs_from_file_by_titles(titles, absolute_path(path_to_file))
     save_to_file(absolute_path(path_to_file), filtered_jobs)
+
+
+def update_job(new_job, path_to_file):
+    jobs = read_from_file(path_to_file)
+    for job in jobs:
+        if job.url == new_job.url:
+            jobs.remove(job)
+            jobs.append(new_job)
+            break
+    save_to_file(path_to_file, jobs)
 
 
 def read_from_file(path_to_file):
