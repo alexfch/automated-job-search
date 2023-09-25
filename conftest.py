@@ -1,5 +1,4 @@
 import os
-import pathlib
 
 from typing import Any, Generator
 
@@ -77,14 +76,13 @@ def before_and_after_test(context: BrowserContext, request):
     os.environ["PROJECT_PATH"] = str(request.config.rootpath)  # os.path.dirname(os.path.abspath(__file__))
     os.environ["COOKIES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "cookies.json")
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    # os.environ["JOB_CANDIDATES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "job-candidates.json")
-    # os.environ["DONT_MATCH_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'),"dont-match.json")
 
-    text_file = open(os.environ["COOKIES_FILE_PATH"], "r")
-    text_cookies = text_file.read()
-    list_dict_cookies = list(eval(text_cookies))
-    context.clear_cookies()
-    context.add_cookies(list_dict_cookies)
+    if os.path.exists(os.environ["COOKIES_FILE_PATH"]):
+        text_file = open(os.environ["COOKIES_FILE_PATH"], "r")
+        text_cookies = text_file.read()
+        list_dict_cookies = list(eval(text_cookies))
+        context.clear_cookies()
+        context.add_cookies(list_dict_cookies)
     yield
 
 
