@@ -79,7 +79,8 @@ class JobsPage(BasePage):
                     {"title": card.title,
                      "url": os.environ["BASE_URL"] + re.compile(r"/jobs/view/\d{10}").search(card.url).group(),
                      "company": card.company,
-                     "location_and_type": card.location_and_type
+                     "location_and_type": card.location_and_type,
+                     "status": "new"
                      })
 
             # filter the results by location and type matching one of the patterns

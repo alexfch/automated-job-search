@@ -8,6 +8,7 @@ class MainMenu:
 
     def __init__(self, page: Page):
         self._search = page.locator("[id].jobs-search-box__keyboard-text-input")
+        self._location = page.locator("div.jobs-search-box__input--location").get_by_role("combobox")
         self._home = page.get_by_title('Home')
         self._my_network = page.get_by_title('My Network')
         self._jobs = page.get_by_title('Jobs')
@@ -17,12 +18,17 @@ class MainMenu:
         self._jobs_panel = page.locator(".jobs-home-scalable-nav:visible")
         self._no_results_found = page.locator("div.jobs-search-no-results-banner")
 
+    def chose_location(self, location):
+        self._location.fill(location)
+        self._search.press('Enter')
+        expect(self._location).not_to_be_focused()
+        return self
+
     def search(self, query):
         self._search.fill(query)
         time.sleep(2)
         self._search.press('Enter')
         try:
-            assert 1 == 1
             expect(self._search_result_text).to_have_text(re.compile(fr"{query}.*"))
         except:
             expect(self._no_results_found).to_be_visible()
