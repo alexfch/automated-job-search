@@ -4,7 +4,7 @@ import pathlib
 from playwright.sync_api import Page
 
 from modules.main_menu import MainMenu
-from modules.filtering import FiltersPanel
+from modules.filtering import FiltersToolbar
 
 
 class BasePage:
@@ -12,7 +12,7 @@ class BasePage:
     def __init__(self, page: Page) -> None:
         self.page = page
         self.main_menu = MainMenu(page)
-        self.filters_panel = FiltersPanel(page)
+        self.filters_panel = FiltersToolbar(page)
 
     def save_cookies_to_file(self):
         cookies = str(self.page.context.cookies())

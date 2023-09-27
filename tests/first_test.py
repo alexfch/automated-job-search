@@ -18,6 +18,7 @@ jobs_in_locations = ["Canada", "United States"]
 
 job_description_criteria = ["Python", "Automation"]
 
+# TODO fix stability issue in filters - In Testing
 # TODO rename first_test module
 # TODO bring configuration settings to a consistent approach
 # TODO setup parametrized test with reading data from a file
@@ -26,6 +27,7 @@ job_description_criteria = ["Python", "Automation"]
 # TODO create unit tests for the main functionality
 # TODO test installation instruction
 # TODO evaluate job description and remove irrelevant jobs from the results list
+# TODO connect json data with Google Sheets table
 
 
 @pytest.mark.parametrize("job_title", jobs_to_search)
@@ -46,15 +48,17 @@ def test_search_jobs_by_criteria(job_title, location, context, login_page: Login
         .chose_location(location)
 
     # set filters
-    jobs_page.filters_panel.show_all_filters() \
-        .set_filter("Date posted", "Past 24 hours") \
-        .set_filter("Experience level", "Mid-Senior level") \
-        .set_filter("Industry", ["Software Development", "IT Services and IT Consulting",
-                                 "Technology, Information and Internet", "Information Technology & Services"]) \
-        .show_results()
+    jobs_page.filters_panel.show_all_filters()
+    jobs_page.all_filters_panel \
+        .set_filters({
+            "Date posted": "Past 24 hours",
+            "Experience level": "Mid-Senior level",
+            "Industry": ["Software Development", "IT Services and IT Consulting",
+                         "Technology, Information and Internet", "Information Technology & Services"]
+        })
 
     # find by location and job type
-    collected_job_cards, dont_match = jobs_page.collect_jobs_by_criteria(
+    collected_job_cards, dont_match = jobs_page.search_results.collect_jobs_by_criteria(
         location_and_type_patterns=[
             re.compile(r"Ontario, Canada.*"),  # hybrid or remote jobs in Ontario
             re.compile(r"(Toronto|Mississauga|Oakville|Burlington), ON(?: \(.*\))?"),  # any job in these cities
