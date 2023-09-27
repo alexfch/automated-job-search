@@ -5,7 +5,18 @@ import typing
 
 from playwright.sync_api import Page, expect, Locator
 
+from modules.filtering import FiltersModal, FiltersToolbar
 from pages.base_page import BasePage
+
+
+class JobsPage(BasePage):
+
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self._no_results_found = self.page.locator("div.jobs-search-no-results-banner")
+        self.search_results = JobsSearchResultsPanel(self.page)
+        self.all_filters_panel = FiltersModal(self.page)
+        self.filters_toolbar = FiltersToolbar(self.page)
 
 
 class JobsSearchResultsPanel:
@@ -17,39 +28,6 @@ class JobsSearchResultsPanel:
         self._footer = self._page.locator("footer.global-footer-compact")
         self._results_label = page.locator("div.jobs-search-results-list__subtitle")
 
-    def scroll_bottom_of_jobs_search_results(self):
-        """
-                The method scrolls to the bottom of jobs list panel to load all results.
-                By default, LinkedIn loads up to 7 jobs.
-
-                :return:
-                """
-        try:
-           self.job_cards.nth(0).hover(position={"x": 50, "y": 10})  # hover mouse over the jobs list panel
-        except:
-            if self.job_cards.count() == 0 and not self.pagination.has_next():
-                print("""WARNING! An unexpected issue appeared while scrolling. 
-                Probably 'No Results Found' appeared while working with pagination. Check screenshot""")
-                return
-        time_start = time.time()
-        while not self.is_all_jobs_loaded() and time.time() - time_start < 1:
-            self._page.mouse.wheel(delta_x=0, delta_y=200)
-
-    def is_all_jobs_loaded(self):
-        expected_count = min(
-            25,  # default number per page
-            int(re.search(re.compile("\d{1,4}"), self._results_label.text_content()).group())
-        )
-        return self.job_cards.count() == expected_count
-
-
-class JobsPage(BasePage):
-
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.search_results = JobsSearchResultsPanel(self.page)
-        self._no_results_found = self.page.locator("div.jobs-search-no-results-banner")
-
     def collect_jobs_by_criteria(
         self,
         job_title_pattern=None,
@@ -57,7 +35,7 @@ class JobsPage(BasePage):
         job_type_patterns=None,
         location_and_type_patterns: list[typing.Pattern[str]] = None
     ):
-        if self._no_results_found.is_visible():
+        if self.job_cards.count() == 0:
             return [], []
 
         # find matching cards
@@ -70,11 +48,11 @@ class JobsPage(BasePage):
             Analyze job results currently displayed on the page
             :return:
             """
-            self.search_results.scroll_bottom_of_jobs_search_results()
+            self.scroll_bottom_of_jobs_search_results()
 
             # read all cards
-            for i in range(self.search_results.job_cards.count()):
-                card = JobCard(self.search_results.job_cards.nth(i))
+            for i in range(self.job_cards.count()):
+                card = JobCard(self.job_cards.nth(i))
                 all_cards_on_page.append(
                     {"title": card.title,
                      "url": os.environ["BASE_URL"] + re.compile(r"/jobs/view/\d{10}").search(card.url).group(),
@@ -95,11 +73,36 @@ class JobsPage(BasePage):
 
         while True:
             iterate_cards_on_the_page()
-            if not self.search_results.pagination.has_next():
+            if not self.pagination.has_next():
                 break
-            self.search_results.pagination.go_to_next()
+            self.pagination.go_to_next()
 
         return cards_match, cards_dont_match
+
+    def scroll_bottom_of_jobs_search_results(self):
+        """
+                The method scrolls to the bottom of jobs list panel to load all results.
+                By default, LinkedIn loads up to 7 jobs.
+
+                :return:
+                """
+        try:
+            self.job_cards.nth(0).hover(position={"x": 50, "y": 10})  # hover mouse over the jobs list panel
+        except:
+            if self.job_cards.count() == 0 and not self.pagination.has_next():
+                print("""WARNING! An unexpected issue appeared while scrolling. 
+                Probably 'No Results Found' appeared while working with pagination. Check screenshot""")
+                return
+        time_start = time.time()
+        while not self.is_all_jobs_loaded() and time.time() - time_start < 1:
+            self._page.mouse.wheel(delta_x=0, delta_y=200)
+
+    def is_all_jobs_loaded(self):
+        expected_count = min(
+            25,  # default number per page
+            int(re.search(re.compile(r"\d{1,4}"), self._results_label.text_content()).group())
+        )
+        return self.job_cards.count() == expected_count
 
 
 class JobCard:
