@@ -20,8 +20,13 @@ class MainMenu:
 
     def chose_location(self, location):
         self._location.fill(location)
-        self._search.press('Enter')
+        time.sleep(2)
+        self._location.press('Enter')
         expect(self._location).not_to_be_focused()
+        try:
+            expect(self._search_result_text).to_have_text(re.compile(fr"{location}.*"), timeout=10000)
+        except:
+            expect(self._no_results_found).to_be_visible()
         return self
 
     def search(self, query):
@@ -29,7 +34,7 @@ class MainMenu:
         time.sleep(2)
         self._search.press('Enter')
         try:
-            expect(self._search_result_text).to_have_text(re.compile(fr"{query}.*"))
+            expect(self._search_result_text).to_have_text(re.compile(fr"{query}.*"), timeout=10000)
         except:
             expect(self._no_results_found).to_be_visible()
         return self
