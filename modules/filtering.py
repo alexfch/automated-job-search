@@ -100,7 +100,7 @@ class FiltersModal(WaitFilterEvents):
 
         all_options_checked = True
         try:
-            expect(self._show_results_button).to_contain_text(re.compile(r"Show.*result?"), timeout=20000)
+            expect(self._show_results_button).to_contain_text(re    .compile(r"Show.*result?"), timeout=20000)
         except:
             all_options_checked = False
 
