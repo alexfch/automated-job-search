@@ -34,6 +34,11 @@ def get_jobs_from_file_by_titles(titles, path_to_file):
     return [job for job in existing_jobs if job['title'] in titles]
 
 
+def get_new_jobs_from_file(path_to_file):
+    existing_jobs = read_from_file(absolute_path(path_to_file))
+    return [job for job in existing_jobs if job['status'] == "new"]
+
+
 def filter_jobs_in_file_by_titles(titles, path_to_file):
     filtered_jobs = get_jobs_from_file_by_titles(titles, absolute_path(path_to_file))
     save_to_file(absolute_path(path_to_file), filtered_jobs)
@@ -47,6 +52,14 @@ def update_job(new_job, path_to_file):
             jobs.append(new_job)
             break
     save_to_file(path_to_file, jobs)
+
+
+def format_to_email_content(jobs_list):
+    message = ""
+    for job in jobs_list:
+        message = f"{message}\n\n{job['title']}\n{job['url']}\n{job['company']}\n{job['location_and_type']}"
+
+    return message
 
 
 def read_from_file(path_to_file):

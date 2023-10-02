@@ -75,6 +75,7 @@ def before_and_after_test(context: BrowserContext, request):
     os.environ["BASE_URL"] = request.config.getini('base_url')
     os.environ["PROJECT_PATH"] = str(request.config.rootpath)  # os.path.dirname(os.path.abspath(__file__))
     os.environ["COOKIES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "cookies.json")
+    os.environ["GOOGLE_CREDENTIALS"] = os.path.join(os.getenv('PROJECT_PATH'), "utilities/credentials.json")
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     if os.path.exists(os.environ["COOKIES_FILE_PATH"]):

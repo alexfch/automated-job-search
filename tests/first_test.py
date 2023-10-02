@@ -7,7 +7,8 @@ from pages.home import HomePage
 from pages.jobs import JobsPage
 from pages.login import LoginPage
 from utilities import results_utils, chatgpt
-from settings import candidates_file_name, dont_matches_file_name
+from settings import candidates_file_name, dont_matches_file_name, email_to
+from utilities.gmailclient import GmailClient
 
 jobs_to_search = ["head of quality assurance",
                   "qa manager",
@@ -18,20 +19,23 @@ jobs_in_locations = ["Canada", "United States"]
 
 job_description_criteria = ["Python", "Automation"]
 
-# TODO fix stability issue in filters - In Testing
-# TODO rename first_test module
+# TODO fix stability issue in filters - Done
+# TODO add sending an email with new opportunities - Done
 # TODO bring configuration settings to a consistent approach
+# TODO add automatic execution every 30 minutes
 # TODO setup parametrized test with reading data from a file
 # TODO move the main functionality from Test to WebApp (based on Ember)
-# TODO replace json files with MongoDB
+# TODO (not sure yet) replace json files with MongoDB
 # TODO create unit tests for the main functionality
 # TODO test installation instruction
 # TODO evaluate job description and remove irrelevant jobs from the results list
 # TODO connect json data with Google Sheets table
+# TODO rename first_test module
 
 
 @pytest.mark.parametrize("job_title", jobs_to_search)
 @pytest.mark.parametrize("location", jobs_in_locations)
+@pytest.mark.flaky(reruns=2)
 def test_search_jobs_by_criteria(job_title, location, context, login_page: LoginPage, home_page: HomePage, jobs_page: JobsPage) -> None:
     # navigate to jobs page
     if not context.cookies():
@@ -99,3 +103,13 @@ def test_exclude_irrelevant_job_titles_chatgpt():
     # results_utils.save_distinct_jobs_list(dont_matches_file_name, irrelevant_jobs)
 
     # results_utils.filter_jobs_in_file_by_titles(relevant_titles, candidates_file_name)
+
+
+def test_send_email():
+    new_jobs = results_utils.get_new_jobs_from_file(candidates_file_name)
+    message_content = results_utils.format_to_email_content(new_jobs)
+
+    if message_content:
+        gmail = GmailClient()
+        gmail.send_message(to=email_to, subject="New jobs on LinkedIn", content=message_content)
+
