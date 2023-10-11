@@ -18,6 +18,10 @@ class JobsPage(BasePage):
         self.all_filters_panel = FiltersModal(self.page)
         self.filters_toolbar = FiltersToolbar(self.page)
 
+    def navigate(self):
+        self.page.goto("/jobs", timeout=0)
+        return self
+
 
 class JobsSearchResultsPanel:
 

@@ -21,7 +21,7 @@ job_description_criteria = ["Python", "Automation"]
 
 # TODO fix stability issue in filters - Done
 # TODO add sending an email with new opportunities - Done
-# TODO bring configuration settings to a consistent approach
+# TODO bring configuration settings to a consistent approach - Done
 # TODO add automatic execution every 30 minutes
 # TODO setup parametrized test with reading data from a file
 # TODO move the main functionality from Test to WebApp (based on Ember)
@@ -43,10 +43,8 @@ def test_search_jobs_by_criteria(job_title, location, context, login_page: Login
         login_page.sign_in(os.getenv('LINKEDIN_LOGIN'), os.getenv('LINKEDIN_PASSWORD'))
         home_page.save_cookies_to_file()
 
-    home_page.navigate()
-    home_page.main_menu.go_to_jobs()
-
     # search by job title and location
+    jobs_page.navigate()
     jobs_page.main_menu \
         .search(job_title) \
         .chose_location(location)
