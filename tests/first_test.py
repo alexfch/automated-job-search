@@ -7,7 +7,7 @@ from pages.home import HomePage
 from pages.jobs import JobsPage
 from pages.login import LoginPage
 from utilities import results_utils, chatgpt
-from settings import candidates_file_name, dont_matches_file_name, email_to
+from settings import candidates_file_name, dont_matches_file_name
 from utilities.gmailclient import GmailClient
 
 jobs_to_search = ["head of quality assurance",
@@ -111,5 +111,5 @@ def test_send_email():
 
     if message_content:
         gmail = GmailClient()
-        gmail.send_message(to=email_to, subject="New jobs on LinkedIn", content=message_content)
+        gmail.send_message(to=os.environ['EMAIL_TO'], subject="New jobs on LinkedIn", content=message_content)
 

@@ -2,7 +2,7 @@ import os
 
 from typing import Any, Generator
 
-import dotenv
+from dotenv import load_dotenv
 import openai
 import pytest
 from playwright.sync_api import (
@@ -18,14 +18,17 @@ from pages.jobs import JobsPage
 from pages.login import LoginPage
 
 
-@pytest.fixture
+load_dotenv()
+
+
+@pytest.fixture(scope="session")
 def playwright() -> Generator[Playwright, None, None]:
     with sync_playwright() as p:
         yield p
 
 
 @pytest.fixture
-def browser_type(playwright: Playwright, browser_name: str
+def browser_type(playwright: Playwright, browser_name: str, request
                  ) -> Generator[BrowserType, None, None]:
     browser_type = None
     if browser_name == "chromium":
@@ -39,18 +42,23 @@ def browser_type(playwright: Playwright, browser_name: str
 
 
 @pytest.fixture
-def browser(browser_type: BrowserType, request) -> Generator[Browser, None, None]:
-    browser = browser_type.launch(
-        headless=eval(request.config.getini('headless'))
-    )
+def browser(browser_type: BrowserType, request, browser_type_launch_args) -> Generator[Browser, None, None]:
+    browser = browser_type.launch(**browser_type_launch_args)
     yield browser
     browser.close()
 
 
 @pytest.fixture
-def context(browser: Browser, request) -> Generator[BrowserContext, None, None]:
+def browser_context_args(browser_context_args):
+    if browser_context_args.get("record_video_dir"):
+        browser_context_args["record_video_dir"] = "videos/"
+    return browser_context_args
+
+
+@pytest.fixture
+def context(browser: Browser, request, browser_context_args) -> Generator[BrowserContext, None, None]:
     context = browser.new_context(
-        base_url=request.config.getini('base_url')
+        **browser_context_args
     )
     yield context
     context.close()
@@ -65,17 +73,11 @@ def page(context: BrowserContext, request):
 
 
 @pytest.fixture(autouse=True)
-def read_secrets():
-    dotenv.load_dotenv()
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
-
-@pytest.fixture(autouse=True)
 def before_and_after_test(context: BrowserContext, request):
-    os.environ["BASE_URL"] = request.config.getini('base_url')
+    os.environ["BASE_URL"] = request.config.getoption('--base-url')  # it is needed for using in page object classes
     os.environ["PROJECT_PATH"] = str(request.config.rootpath)  # os.path.dirname(os.path.abspath(__file__))
-    os.environ["COOKIES_FILE_PATH"] = os.path.join(os.getenv('PROJECT_PATH'), "cookies.json")
-    os.environ["GOOGLE_CREDENTIALS"] = os.path.join(os.getenv('PROJECT_PATH'), "utilities/credentials.json")
+    os.environ["COOKIES_FILE_PATH"] = os.path.join(os.environ["PROJECT_PATH"], "cookies.json")
+    os.environ["GOOGLE_CREDENTIALS"] = os.path.join(os.environ["PROJECT_PATH"], "utilities/credentials.json")
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     if os.path.exists(os.environ["COOKIES_FILE_PATH"]):
@@ -88,8 +90,20 @@ def before_and_after_test(context: BrowserContext, request):
 
 
 def pytest_addoption(parser: Any) -> None:
-    parser.addini("headless", help="Browser mode", default=True)
-    parser.addini("alluredir", help="Allure report directory", default=None)
+    # the below two options (--env and --profile) are not used meanwhile
+    # and are needed just as example how to set a list of available options for environments and profiles
+    parser.addoption(
+        "--env",
+        action="store",
+        default="qa",
+        help="Application environment under test",
+        choices=("qa", "uat", "prod"))
+    parser.addoption(
+        "--profile", "--p",
+        action="store",
+        default="smoke",
+        help="Configuration of a test set, browser, device, etc",
+        choices=("smoke", "regression"))
 
 
 @pytest.fixture
