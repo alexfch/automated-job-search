@@ -19,20 +19,6 @@ jobs_in_locations = ["Canada", "United States"]
 
 job_description_criteria = ["Python", "Automation"]
 
-# TODO fix stability issue in filters - Done
-# TODO add sending an email with new opportunities - Done
-# TODO bring configuration settings to a consistent approach - Done
-# TODO add automatic execution every 30 minutes
-# TODO setup parametrized test with reading data from a file
-# TODO add jobs data format convenient for using the the stats table
-# TODO connect json data with Google Sheets table
-# TODO evaluate job description and remove irrelevant jobs from the results list (with ChatGPT)
-# TODO move the main functionality from Test to WebApp (based on Ember)
-# TODO (not sure yet) replace json files with MongoDB
-# TODO create unit tests for the main functionality
-# TODO test installation instruction
-# TODO rename first_test module
-
 
 @pytest.mark.parametrize("job_title", jobs_to_search)
 @pytest.mark.parametrize("location", jobs_in_locations)
